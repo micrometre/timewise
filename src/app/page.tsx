@@ -8,7 +8,6 @@ import { formatCurrency } from '@/lib/utils';
 
 export default function Home() {
   const [monthlyIncome, setMonthlyIncome] = useState<string>('');
-
   const income = parseFloat(monthlyIncome) || 0;
   const taxCalc = calculateMonthlyTax(income);
 
