@@ -31,18 +31,7 @@ yarn install
 pnpm install
 ```
 
-2. **Setup SQLite WASM files** (Required for persistent storage):
-
-Copy the SQLite WASM files to enable client-side database:
-
-```bash
-# If you have the cashier project locally:
-cp -r ~/repos/cashier/public/sqlite-wasm ./public/
-
-# Or follow instructions in public/sqlite-wasm/README.md to download from SQLite.org
-```
-
-3. Run the development server:
+2. Run the development server:
 
 ```bash
 npm run dev
@@ -53,6 +42,8 @@ pnpm dev
 ```
 
 3. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+> **Note**: SQLite WASM files are already included in the repository (`public/sqlite-wasm/`), so no additional setup is required for persistent storage.
 
 ## Usage
 
