@@ -4,11 +4,14 @@ import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import { WorkEntry } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { database, initializeDatabase } from '@/lib/database';
 
 export default function TimesheetPage() {
   const [entries, setEntries] = useState<WorkEntry[]>([]);
   const [totalHours, setTotalHours] = useState(0);
   const [totalEarnings, setTotalEarnings] = useState(0);
+  const [dbInitialized, setDbInitialized] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -22,15 +25,32 @@ export default function TimesheetPage() {
   });
 
   useEffect(() => {
-    loadEntries();
+    initDb();
   }, []);
 
-  const loadEntries = () => {
-    const saved = localStorage.getItem('workEntries');
-    if (saved) {
-      const data = JSON.parse(saved);
+  const initDb = async () => {
+    try {
+      setLoading(true);
+      await initializeDatabase();
+      setDbInitialized(true);
+      await loadEntries();
+      console.log('Database initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize database:', error);
+      // Fallback to empty state
+      setEntries([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadEntries = async () => {
+    try {
+      const data = await database.getWorkEntries();
       setEntries(data);
       calculateTotals(data);
+    } catch (error) {
+      console.error('Failed to load entries:', error);
     }
   };
 
@@ -41,12 +61,17 @@ export default function TimesheetPage() {
     setTotalEarnings(earnings);
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (confirm('Are you sure you want to clear all entries?')) {
-      setEntries([]);
-      localStorage.removeItem('workEntries');
-      setTotalHours(0);
-      setTotalEarnings(0);
+      try {
+        await database.clearAllEntries();
+        setEntries([]);
+        setTotalHours(0);
+        setTotalEarnings(0);
+      } catch (error) {
+        console.error('Failed to clear entries:', error);
+        alert('Failed to clear entries. Please try again.');
+      }
     }
   };
 
@@ -108,7 +133,7 @@ export default function TimesheetPage() {
     }
   };
 
-  const handleAddEntry = (e: React.FormEvent) => {
+  const handleAddEntry = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const hours = parseFloat(formData.hours);
@@ -125,7 +150,7 @@ export default function TimesheetPage() {
     const dateParts = formData.date.split('-');
     const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0].slice(2)}`;
 
-    const newEntry: WorkEntry = {
+    const newEntry: Omit<WorkEntry, 'id' | 'createdAt'> = {
       day: formData.day,
       date: formattedDate,
       shift: formData.shift + (formData.startTime && formData.endTime ? ` (${formData.startTime}-${formData.endTime})` : ''),
@@ -134,21 +159,24 @@ export default function TimesheetPage() {
       value,
     };
 
-    const newEntries = [...entries, newEntry];
-    setEntries(newEntries);
-    localStorage.setItem('workEntries', JSON.stringify(newEntries));
-    calculateTotals(newEntries);
+    try {
+      await database.addWorkEntry(newEntry);
+      await loadEntries();
 
-    // Reset form
-    setFormData({
-      day: '',
-      date: '',
-      shift: '',
-      startTime: '',
-      endTime: '',
-      hours: '',
-      rate: '',
-    });
+      // Reset form
+      setFormData({
+        day: '',
+        date: '',
+        shift: '',
+        startTime: '',
+        endTime: '',
+        hours: '',
+        rate: '',
+      });
+    } catch (error) {
+      console.error('Failed to add entry:', error);
+      alert('Failed to add entry. Please try again.');
+    }
   };
 
   return (
@@ -156,16 +184,41 @@ export default function TimesheetPage() {
       <Navigation />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Timesheet</h1>
-          <p className="mt-2 text-gray-600">
-            Add and manage your work hours
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Timesheet</h1>
+              <p className="mt-2 text-gray-600">
+                Add and manage your work hours
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-700">Database:</span>
+              <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${
+                dbInitialized 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                <div className={`w-2 h-2 rounded-full ${
+                  dbInitialized ? 'bg-green-500' : 'bg-yellow-500'
+                }`}></div>
+                <span>{dbInitialized ? 'Connected (OPFS)' : 'Initializing...'}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Manual Entry Form */}
-        <div className="card mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Add Work Entry</h2>
-          <form onSubmit={handleAddEntry} className="space-y-4">
+        {/* Loading State */}
+        {loading ? (
+          <div className="card text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
+            <p className="text-gray-500 text-lg">Initializing database...</p>
+          </div>
+        ) : (
+          <>
+            {/* Manual Entry Form */}
+            <div className="card mb-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Add Work Entry</h2>
+              <form onSubmit={handleAddEntry} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="day" className="label">
@@ -292,8 +345,8 @@ export default function TimesheetPage() {
           </form>
         </div>
 
-        {/* Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {/* Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="card">
             <div className="text-sm font-medium text-gray-500">Total Entries</div>
             <div className="mt-2 text-3xl font-bold text-gray-900">
@@ -312,22 +365,22 @@ export default function TimesheetPage() {
               {formatCurrency(totalEarnings)}
             </div>
           </div>
-        </div>
-
-        {/* Entries Table */}
-        {entries.length > 0 ? (
-          <div className="card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Work Entries</h2>
-              <button onClick={handleClearAll} className="btn-secondary">
-                Clear All Data
-              </button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+
+            {/* Entries Table */}
+                {entries.length > 0 ? (
+              <div className="card">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">Work Entries</h2>
+                  <button onClick={handleClearAll} className="btn-secondary">
+                    Clear All Data
+                  </button>
+                </div>
+                    <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -345,53 +398,55 @@ export default function TimesheetPage() {
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Earned
                     </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {entries.map((entry, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(entry.date)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                        {entry.day}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                        {entry.shift || '-'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
-                        {entry.hours.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
-                        {formatCurrency(entry.rate)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
-                        {formatCurrency(entry.value)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-gray-50">
-                  <tr>
-                    <td colSpan={3} className="px-4 py-3 text-sm font-bold text-gray-900">
-                      Total
-                    </td>
-                    <td className="px-4 py-3 text-sm font-bold text-gray-900 text-right">
-                      {totalHours.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3"></td>
-                    <td className="px-4 py-3 text-sm font-bold text-gray-900 text-right">
-                      {formatCurrency(totalEarnings)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        ) : (
-          <div className="card text-center py-12">
-            <p className="text-gray-500 text-lg">No entries yet. Add a work entry to get started.</p>
-          </div>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {entries.map((entry, index) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {formatDate(entry.date)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                            {entry.day}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                            {entry.shift || '-'}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
+                            {entry.hours.toFixed(2)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
+                            {formatCurrency(entry.rate)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(entry.value)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="bg-gray-50">
+                      <tr>
+                        <td colSpan={3} className="px-4 py-3 text-sm font-bold text-gray-900">
+                          Total
+                        </td>
+                        <td className="px-4 py-3 text-sm font-bold text-gray-900 text-right">
+                          {totalHours.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3"></td>
+                        <td className="px-4 py-3 text-sm font-bold text-gray-900 text-right">
+                          {formatCurrency(totalEarnings)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <div className="card text-center py-12">
+                <p className="text-gray-500 text-lg">No entries yet. Add a work entry to get started.</p>
+              </div>
+            )}
+          </>
         )}
       </main>
     </>

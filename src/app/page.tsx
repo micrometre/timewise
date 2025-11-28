@@ -1,159 +1,315 @@
-'use client';
 
-import { useState, useEffect } from 'react';
+'use client';
+import { useState } from 'react';
 import Navigation from '@/components/Navigation';
-import { WorkEntry } from '@/types';
+import Link from 'next/link';
+import { calculateMonthlyTax } from '@/lib/taxCalculator';
 import { formatCurrency } from '@/lib/utils';
-import { calculateTax } from '@/lib/taxCalculator';
 
 export default function Home() {
-  const [entries, setEntries] = useState<WorkEntry[]>([]);
-  const [totalHours, setTotalHours] = useState(0);
-  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [monthlyIncome, setMonthlyIncome] = useState<string>('');
 
-  useEffect(() => {
-    // Load data from localStorage
-    const saved = localStorage.getItem('workEntries');
-    if (saved) {
-      const data = JSON.parse(saved);
-      setEntries(data);
-      
-      const hours = data.reduce((sum: number, entry: WorkEntry) => sum + entry.hours, 0);
-      const earnings = data.reduce((sum: number, entry: WorkEntry) => sum + entry.value, 0);
-      
-      setTotalHours(hours);
-      setTotalEarnings(earnings);
-    }
-  }, []);
-
-  const taxCalc = calculateTax(totalEarnings);
-  const recentEntries = entries.slice(-5).reverse();
+  const income = parseFloat(monthlyIncome) || 0;
+  const taxCalc = calculateMonthlyTax(income);
 
   return (
     <>
       <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-2 text-gray-600">
-            Overview of your work hours, earnings, and tax obligations
-          </p>
+      <main className="min-h-screen bg-gradient-to-b from-primary-50 to-white">
+        {/* Hero Section with Integrated Tax Calculator */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left side - Hero text */}
+            <div className="text-center lg:text-left">
+              <div className="inline-flex items-center bg-primary-100 text-primary-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
+                🇬🇧 UK Tax Year 2024/25
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+                Know Your <span className="text-primary-600">Take-Home Pay</span> Instantly
+              </h1>
+              <p className="text-xl text-gray-600 mb-8">
+                Enter your monthly salary and see exactly how much you'll take home after tax and National Insurance. No signup required.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link
+                  href="/timesheet"
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
+                >
+                  Track Your Hours →
+                </Link>
+                <Link
+                  href="/tax"
+                  className="bg-white hover:bg-gray-50 text-primary-600 px-8 py-4 rounded-lg font-semibold text-lg border-2 border-primary-600 transition-colors duration-200"
+                >
+                  Full Tax Calculator
+                </Link>
+              </div>
+            </div>
+
+            {/* Right side - Tax Calculator Widget */}
+            <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Monthly Tax Calculator</h2>
+                <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">FREE</span>
+              </div>
+              
+              {/* Input */}
+              <div className="mb-6">
+                <label htmlFor="monthly-salary" className="block text-sm font-medium text-gray-700 mb-2">
+                  Your Monthly Gross Salary
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-xl font-semibold">£</span>
+                  <input
+                    id="monthly-salary"
+                    type="number"
+                    value={monthlyIncome}
+                    onChange={(e) => setMonthlyIncome(e.target.value)}
+                    placeholder="3,000"
+                    className="w-full pl-10 pr-4 py-4 text-2xl font-semibold border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Results - Always visible with placeholder or real values */}
+              <div className="space-y-4">
+                {/* Take Home Pay - Highlighted */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-sm font-medium text-green-700">Your Take-Home Pay</div>
+                      <div className="text-xs text-green-600">After all deductions</div>
+                    </div>
+                    <div className="text-3xl font-bold text-green-600">
+                      {income > 0 ? formatCurrency(taxCalc.netIncome) : '£—'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Breakdown */}
+                <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-600">Gross Salary</span>
+                    <span className="font-semibold text-gray-900">
+                      {income > 0 ? formatCurrency(taxCalc.grossIncome) : '£—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-600">Income Tax</span>
+                    <span className="font-semibold text-red-600">
+                      {income > 0 ? `-${formatCurrency(taxCalc.incomeTax)}` : '£—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-600">National Insurance</span>
+                    <span className="font-semibold text-orange-600">
+                      {income > 0 ? `-${formatCurrency(taxCalc.nationalInsurance)}` : '£—'}
+                    </span>
+                  </div>
+                  <div className="border-t border-gray-200 pt-3 flex justify-between items-center text-sm">
+                    <span className="text-gray-700 font-medium">Effective Tax Rate</span>
+                    <span className="font-bold text-primary-600">
+                      {income > 0 ? `${taxCalc.effectiveRate.toFixed(1)}%` : '—%'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quick Info */}
+                <div className="text-xs text-gray-500 text-center pt-2">
+                  Based on UK Tax Year 2024/25 rates • Updates in real-time
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="card">
-            <div className="text-sm font-medium text-gray-500">Total Hours</div>
-            <div className="mt-2 text-3xl font-bold text-gray-900">
-              {totalHours.toFixed(2)}
+        {/* Why Use Our Calculator Section */}
+        <div className="bg-white py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Why Use Our Tax Calculator?
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Instant, accurate UK tax calculations with no signup required
+              </p>
             </div>
-            <div className="mt-1 text-sm text-gray-500">
-              {(totalHours / 4).toFixed(1)} weeks
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="text-sm font-medium text-gray-500">Gross Income</div>
-            <div className="mt-2 text-3xl font-bold text-green-600">
-              {formatCurrency(totalEarnings)}
-            </div>
-            <div className="mt-1 text-sm text-gray-500">Before tax</div>
-          </div>
-
-          <div className="card">
-            <div className="text-sm font-medium text-gray-500">Tax & NI</div>
-            <div className="mt-2 text-3xl font-bold text-red-600">
-              {formatCurrency(taxCalc.totalDeductions)}
-            </div>
-            <div className="mt-1 text-sm text-gray-500">
-              {taxCalc.effectiveRate.toFixed(1)}% effective rate
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="text-sm font-medium text-gray-500">Net Income</div>
-            <div className="mt-2 text-3xl font-bold text-primary-600">
-              {formatCurrency(taxCalc.netIncome)}
-            </div>
-            <div className="mt-1 text-sm text-gray-500">After deductions</div>
-          </div>
-        </div>
-
-        {/* Tax Breakdown */}
-        <div className="card mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Tax Breakdown</h2>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-600">Income Tax</span>
-              <span className="font-semibold">{formatCurrency(taxCalc.incomeTax)}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-600">National Insurance</span>
-              <span className="font-semibold">{formatCurrency(taxCalc.nationalInsurance)}</span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-700 font-medium">Total Deductions</span>
-              <span className="font-bold text-lg">{formatCurrency(taxCalc.totalDeductions)}</span>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="text-center p-6">
+                <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">⚡</span>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Instant Results</h3>
+                <p className="text-sm text-gray-600">See your take-home pay as you type</p>
+              </div>
+              <div className="text-center p-6">
+                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">✓</span>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">2024/25 Rates</h3>
+                <p className="text-sm text-gray-600">Up-to-date with current UK tax year</p>
+              </div>
+              <div className="text-center p-6">
+                <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">🔒</span>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">100% Private</h3>
+                <p className="text-sm text-gray-600">Your data never leaves your browser</p>
+              </div>
+              <div className="text-center p-6">
+                <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">💷</span>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Free Forever</h3>
+                <p className="text-sm text-gray-600">No hidden fees, no subscriptions</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Recent Entries */}
-        <div className="card">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Recent Entries</h2>
-            <a href="/timesheet" className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-              View all →
-            </a>
+        {/* Features Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+            More Than Just a Tax Calculator
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="card">
+              <div className="text-4xl mb-4">⏰</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Smart Timesheet</h3>
+              <ul className="text-gray-600 space-y-2">
+                <li>✓ Auto-calculate hours from start/end times</li>
+                <li>✓ Date picker with automatic day detection</li>
+                <li>✓ Shift type selection (Morning/Afternoon/Evening/Night)</li>
+                <li>✓ Handles overnight shifts correctly</li>
+              </ul>
+            </div>
+
+            <div className="card">
+              <div className="text-4xl mb-4">📊</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Earnings Dashboard</h3>
+              <ul className="text-gray-600 space-y-2">
+                <li>✓ Track total hours worked</li>
+                <li>✓ View gross income calculations</li>
+                <li>✓ Connect to tax calculator</li>
+                <li>✓ Export your data anytime</li>
+              </ul>
+            </div>
+
+            <div className="card">
+              <div className="text-4xl mb-4">🔒</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Privacy First</h3>
+              <ul className="text-gray-600 space-y-2">
+                <li>✓ SQLite database in your browser (OPFS)</li>
+                <li>✓ No data sent to servers</li>
+                <li>✓ Works completely offline</li>
+                <li>✓ Your data stays on your device</li>
+              </ul>
+            </div>
           </div>
-          {recentEntries.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Day
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Shift
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Hours
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      Earned
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {recentEntries.map((entry, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-900">{entry.date}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{entry.day}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{entry.shift}</td>
-                      <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                        {entry.hours.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium">
-                        {formatCurrency(entry.value)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <p>No work entries yet.</p>
-              <a href="/timesheet" className="text-primary-600 hover:text-primary-700 mt-2 inline-block">
-                Import your timesheet
-              </a>
-            </div>
-          )}
         </div>
+
+        {/* How It Works Section */}
+        <div className="bg-gray-50 py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+              How It Works
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="bg-primary-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                  1
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Add Work Entries</h3>
+                <p className="text-gray-600">
+                  Select a date, choose your shift, enter start/end times, and your hourly rate. Hours are calculated automatically.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="bg-primary-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                  2
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Track Your Earnings</h3>
+                <p className="text-gray-600">
+                  View total hours worked, gross income, and automatic tax calculations on your dashboard.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="bg-primary-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                  3
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Plan Your Finances</h3>
+                <p className="text-gray-600">
+                  Use the tax calculator to understand your take-home pay and plan for different income scenarios.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Technology Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="card">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+              Built with Modern Technology
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">🗄️ SQLite WASM + OPFS</h3>
+                <p className="text-gray-600">
+                  Full SQL database running in your browser with persistent storage using Origin Private File System.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">⚡ Next.js 14</h3>
+                <p className="text-gray-600">
+                  Built with the latest Next.js framework for fast, responsive performance.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">🔐 Privacy Focused</h3>
+                <p className="text-gray-600">
+                  No servers, no tracking, no accounts. Your data never leaves your device.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">📱 Responsive Design</h3>
+                <p className="text-gray-600">
+                  Works perfectly on desktop, tablet, and mobile devices.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="bg-primary-600 py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Ready to Track Your Time Wisely?
+            </h2>
+            <p className="text-xl text-primary-100 mb-8">
+              No signup required. Start tracking your work hours in seconds.
+            </p>
+            <Link
+              href="/timesheet"
+              className="bg-white hover:bg-gray-100 text-primary-600 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-block"
+            >
+              Start Now - It's Free →
+            </Link>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="bg-gray-900 text-gray-400 py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p>© 2025 TimeWise. Built with ❤️ for UK workers.</p>
+            <p className="mt-2 text-sm">
+              Browser Requirements: Chrome 86+, Edge 86+, Firefox 111+, Safari 15.2+
+            </p>
+          </div>
+        </footer>
       </main>
     </>
   );

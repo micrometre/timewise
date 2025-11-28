@@ -10,7 +10,7 @@ A Next.js application for managing work hours, tracking salary, and calculating 
 - 📈 **Real-time Calculations**: Automatic tax and hours calculations based on current UK rates (2024/25)
 - 🕒 **Intelligent Time Tracking**: Auto-calculate hours from start/end times
 - 📅 **Date Management**: Automatic day detection from selected dates
-- 💾 **Local Storage**: Data persists securely in your browser
+- 💾 **Persistent Storage**: SQLite WASM with OPFS for durable, client-side data storage
 
 ## Getting Started
 
@@ -31,7 +31,18 @@ yarn install
 pnpm install
 ```
 
-2. Run the development server:
+2. **Setup SQLite WASM files** (Required for persistent storage):
+
+Copy the SQLite WASM files to enable client-side database:
+
+```bash
+# If you have the cashier project locally:
+cp -r ~/repos/cashier/public/sqlite-wasm ./public/
+
+# Or follow instructions in public/sqlite-wasm/README.md to download from SQLite.org
+```
+
+3. Run the development server:
 
 ```bash
 npm run dev
@@ -93,7 +104,8 @@ The dashboard provides an at-a-glance view of:
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Storage**: Browser localStorage
+- **Database**: SQLite WASM with OPFS (Origin Private File System)
+- **Storage**: Persistent client-side database
 
 ## Project Structure
 
@@ -129,6 +141,32 @@ src/
 - Time pickers with 15-minute intervals
 - Shift type dropdown (Morning/Afternoon/Evening/Night)
 - All calculations update automatically
+
+### Persistent Storage
+- **SQLite WASM**: Full SQL database running in your browser
+- **OPFS**: Origin Private File System for durable storage
+- **No Server**: All data stays on your device
+- **Offline Capable**: Works without internet connection
+- **Large Capacity**: Much more storage than localStorage
+- **Data Security**: Origin-isolated, private to your site
+
+## Browser Compatibility
+
+TimeWise requires a modern browser with OPFS support:
+
+| Browser | OPFS Support | Status |
+|---------|--------------|--------|
+| Chrome  | 86+          | ✅ Full Support |
+| Edge    | 86+          | ✅ Full Support |
+| Firefox | 111+         | ✅ Full Support |
+| Safari  | 15.2+        | ✅ Full Support |
+
+## Privacy & Security
+
+- **Local-First**: All data stays on your device
+- **No Server Communication**: Zero data transmission to external servers
+- **OPFS Security**: Origin-isolated storage prevents cross-site access
+- **No Account Required**: Immediate use without registration
 
 ## Building for Production
 
