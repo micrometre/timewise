@@ -31,12 +31,6 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
-                  href="/timesheet"
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200"
-                >
-                  Track Your Hours →
-                </Link>
-                <Link
                   href="/tax"
                   className="bg-white hover:bg-gray-50 text-primary-600 px-8 py-4 rounded-lg font-semibold text-lg border-2 border-primary-600 transition-colors duration-200"
                 >
@@ -166,86 +160,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Features Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
-            More Than Just a Tax Calculator
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="card">
-              <div className="text-4xl mb-4">⏰</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Smart Timesheet</h3>
-              <ul className="text-gray-600 space-y-2">
-                <li>✓ Auto-calculate hours from start/end times</li>
-                <li>✓ Date picker with automatic day detection</li>
-                <li>✓ Shift type selection (Morning/Afternoon/Evening/Night)</li>
-                <li>✓ Handles overnight shifts correctly</li>
-              </ul>
-            </div>
 
-            <div className="card">
-              <div className="text-4xl mb-4">📊</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Earnings Dashboard</h3>
-              <ul className="text-gray-600 space-y-2">
-                <li>✓ Track total hours worked</li>
-                <li>✓ View gross income calculations</li>
-                <li>✓ Connect to tax calculator</li>
-                <li>✓ Export your data anytime</li>
-              </ul>
-            </div>
 
-            <div className="card">
-              <div className="text-4xl mb-4">🔒</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Privacy First</h3>
-              <ul className="text-gray-600 space-y-2">
-                <li>✓ SQLite database in your browser (OPFS)</li>
-                <li>✓ No data sent to servers</li>
-                <li>✓ Works completely offline</li>
-                <li>✓ Your data stays on your device</li>
-              </ul>
-            </div>
-          </div>
-        </div>
 
-        {/* How It Works Section */}
-        <div className="bg-gray-50 py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
-              How It Works
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="bg-primary-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
-                  1
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Add Work Entries</h3>
-                <p className="text-gray-600">
-                  Select a date, choose your shift, enter start/end times, and your hourly rate. Hours are calculated automatically.
-                </p>
-              </div>
-
-              <div className="text-center">
-                <div className="bg-primary-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
-                  2
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Track Your Earnings</h3>
-                <p className="text-gray-600">
-                  View total hours worked, gross income, and automatic tax calculations on your dashboard.
-                </p>
-              </div>
-
-              <div className="text-center">
-                <div className="bg-primary-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
-                  3
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Plan Your Finances</h3>
-                <p className="text-gray-600">
-                  Use the tax calculator to understand your take-home pay and plan for different income scenarios.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Technology Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -254,12 +171,6 @@ export default function Home() {
               Built with Modern Technology
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">🗄️ SQLite WASM + OPFS</h3>
-                <p className="text-gray-600">
-                  Full SQL database running in your browser with persistent storage using Origin Private File System.
-                </p>
-              </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">⚡ Next.js 14</h3>
                 <p className="text-gray-600">
@@ -272,33 +183,10 @@ export default function Home() {
                   No servers, no tracking, no accounts. Your data never leaves your device.
                 </p>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">📱 Responsive Design</h3>
-                <p className="text-gray-600">
-                  Works perfectly on desktop, tablet, and mobile devices.
-                </p>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* CTA Section */}
-        <div className="bg-primary-600 py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Ready to Track Your Time Wisely?
-            </h2>
-            <p className="text-xl text-primary-100 mb-8">
-              No signup required. Start tracking your work hours in seconds.
-            </p>
-            <Link
-              href="/timesheet"
-              className="bg-white hover:bg-gray-100 text-primary-600 px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 inline-block"
-            >
-              Start Now - It's Free →
-            </Link>
-          </div>
-        </div>
 
         {/* Footer */}
         <footer className="bg-gray-900 text-gray-400 py-8">

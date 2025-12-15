@@ -4,13 +4,9 @@ A Next.js application for managing work hours, tracking salary, and calculating 
 
 ## Features
 
-- 📊 **Dashboard**: Overview of total hours worked, earnings, and tax breakdown
-- ⏰ **Smart Timesheet**: Add work entries with automatic calculations and date handling
 - 💰 **Tax Calculator**: Calculate UK income tax and National Insurance contributions
 - 📈 **Real-time Calculations**: Automatic tax and hours calculations based on current UK rates (2024/25)
-- 🕒 **Intelligent Time Tracking**: Auto-calculate hours from start/end times
 - 📅 **Date Management**: Automatic day detection from selected dates
-- 💾 **Persistent Storage**: SQLite WASM with OPFS for durable, client-side data storage
 
 ## Getting Started
 
@@ -47,15 +43,6 @@ pnpm dev
 
 ## Usage
 
-### Managing Timesheets
-
-1. Navigate to the **Timesheet** page
-2. Fill in the work entry form:
-   - Select a date (day auto-populates)
-   - Choose shift type (Morning/Afternoon/Evening/Night)
-   - Select start and end times (hours auto-calculate)
-   - Enter your hourly rate
-3. Click "Add Entry"
 4. Your work entries will be displayed in the table below
 
 ### Tax Calculator
@@ -69,14 +56,6 @@ pnpm dev
    - Net Income
    - Effective tax rate
 
-### Dashboard
-
-The dashboard provides an at-a-glance view of:
-- Total hours worked
-- Gross income
-- Tax and NI deductions
-- Net income after tax
-- Recent work entries
 
 ## Tax Rates (2024/25)
 

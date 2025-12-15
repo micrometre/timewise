@@ -9,7 +9,6 @@ export default function TaxPage() {
   const [annualIncome, setAnnualIncome] = useState<string>('');
   const [monthlyIncome, setMonthlyIncome] = useState<string>('');
   const [useMonthly, setUseMonthly] = useState(false);
-  const [savedIncome, setSavedIncome] = useState(0);
 
   useEffect(() => {
     // Load saved timesheet data
@@ -17,7 +16,6 @@ export default function TaxPage() {
     if (saved) {
       const data = JSON.parse(saved);
       const total = data.reduce((sum: number, entry: any) => sum + entry.value, 0);
-      setSavedIncome(total);
       setAnnualIncome(total.toString());
     }
   }, []);
@@ -30,10 +28,6 @@ export default function TaxPage() {
     ? calculateMonthlyTax(income)
     : calculateTax(income);
 
-  const handleUseTimesheetData = () => {
-    setAnnualIncome(savedIncome.toString());
-    setUseMonthly(false);
-  };
 
   return (
     <>
@@ -87,14 +81,6 @@ export default function TaxPage() {
                   placeholder="Enter annual income"
                   className="input-field"
                 />
-                {savedIncome > 0 && (
-                  <button
-                    onClick={handleUseTimesheetData}
-                    className="mt-2 text-sm text-primary-600 hover:text-primary-700"
-                  >
-                    Use timesheet data: {formatCurrency(savedIncome)}
-                  </button>
-                )}
               </div>
             ) : (
               <div>

@@ -10,8 +10,6 @@ export default function Navigation() {
 
   const navItems = [
     { href: '/', label: 'Home', icon: '🏠' },
-    { href: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { href: '/timesheet', label: 'Timesheet', icon: '⏰' },
     { href: '/tax', label: 'Tax Calculator', icon: '💰' },
   ];
 
